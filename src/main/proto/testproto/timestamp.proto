@@ -1,0 +1,24 @@
+/*
+ * Copyright (c) 2020 Alert Innovation. All rights reserved.
+ */
+syntax = "proto3";
+package testproto;
+
+/*
+ * It was suggested early on that 'google/protobuf/timestamp.proto' be used, however, it converts from
+ * '1970-01-01T00:00:00Z' to seconds/nanos, not raw seconds/nanos that Java's Instant uses.
+ *
+ * @author jwheeler
+ */
+message Timestamp {
+    /*
+     * The number of seconds from the epoch of 1970-01-01T00:00:00Z.
+     */
+    int64 epoch_second = 1;
+
+    /*
+     * The number of nanoseconds, later along the time-line, from the seconds field. This is always positive, and never
+     * exceeds 999,999,999.
+     */
+    int32 nano = 2;
+}
