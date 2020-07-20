@@ -1,5 +1,7 @@
 package com.github.simplesteph.grpc.greeting.server;
 
+import com.proto.greet.GreetManyTimesRequest;
+import com.proto.greet.GreetManyTimesResponse;
 import com.proto.greet.GreetRequest;
 import com.proto.greet.GreetResponse;
 import com.proto.greet.GreetServiceGrpc;
@@ -26,5 +28,24 @@ public class GreetServiceImpl extends GreetServiceGrpc.GreetServiceImplBase {
     responseObserver.onCompleted();
   }
 
-
+  @Override
+  public void greetManyTimes(GreetManyTimesRequest request, StreamObserver<GreetManyTimesResponse> responseObserver) {
+    String firstName = request.getGreeting().getFirstName();
+    try {
+      for (int i=0;i<10; i++){
+        String result = "Helo " + firstName + ", response number: " + i ;
+        GreetManyTimesResponse response = GreetManyTimesResponse.newBuilder()
+            .setResult(result)
+            .build();
+        // Send the response
+        responseObserver.onNext(response);
+        Thread.sleep(1000L);
+      }
+    }catch (InterruptedException e){
+      e.printStackTrace();
+    }finally {
+      // Complete the RPC call
+      responseObserver.onCompleted();
+    }
+  }
 }

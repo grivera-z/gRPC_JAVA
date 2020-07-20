@@ -14,7 +14,19 @@ message SumResponse {
     int32 sum_result = 1;
 }
 
+message SumManyTimesRequest{
+    SumRequest sumRequest = 1;
+}
+
+message SumManyTimesResponse {
+    string result = 1;
+}
+
+
 service CalculatorService {
     // Unary
     rpc Sum(SumRequest) returns (SumResponse) {};
+
+    // Server Streaming
+    rpc SumManyTimes(SumManyTimesRequest) returns (stream SumManyTimesResponse) {};
 }
