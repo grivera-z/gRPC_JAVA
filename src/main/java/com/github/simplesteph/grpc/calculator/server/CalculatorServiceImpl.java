@@ -1,9 +1,7 @@
 package com.github.simplesteph.grpc.calculator.server;
 
 
-import com.proto.sum.CalculatorServiceGrpc;
-import com.proto.sum.SumRequest;
-import com.proto.sum.SumResponse;
+import com.proto.sum.*;
 import io.grpc.stub.StreamObserver;
 
 public class CalculatorServiceImpl extends CalculatorServiceGrpc.CalculatorServiceImplBase {
@@ -26,4 +24,31 @@ public class CalculatorServiceImpl extends CalculatorServiceGrpc.CalculatorServi
     // Complete the RPC call
     responseObserver.onCompleted();
   }
+
+  @Override
+  public void primeNumberDecomposition(PrimeNumberDecompositionRequest request, StreamObserver<PrimeNumberDecompositionResponse> responseObserver) {
+    Integer number = request.getNumber();
+    Integer divisor = 2;
+
+      while (number > 1) {
+        if (number % divisor == 0){
+          number = number/divisor;
+          PrimeNumberDecompositionResponse sumManyTimesResponse = PrimeNumberDecompositionResponse.newBuilder()
+                  .setPrimeFactor(divisor)
+                  .build();
+
+          // Send the response
+          responseObserver.onNext(sumManyTimesResponse);
+        }
+        else{
+          divisor=divisor+1;
+        }
+      }
+
+      // Complete the RPC call
+      responseObserver.onCompleted();
+
+  }
+
+
 }

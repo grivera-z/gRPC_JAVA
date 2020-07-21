@@ -14,12 +14,12 @@ message SumResponse {
     int32 sum_result = 1;
 }
 
-message SumManyTimesRequest{
-    SumRequest sumRequest = 1;
+message PrimeNumberDecompositionRequest{
+    int32 number = 1;
 }
 
-message SumManyTimesResponse {
-    string result = 1;
+message PrimeNumberDecompositionResponse {
+    int32 prime_factor = 1;
 }
 
 
@@ -28,5 +28,5 @@ service CalculatorService {
     rpc Sum(SumRequest) returns (SumResponse) {};
 
     // Server Streaming
-    rpc SumManyTimes(SumManyTimesRequest) returns (stream SumManyTimesResponse) {};
+    rpc PrimeNumberDecomposition(PrimeNumberDecompositionRequest) returns (stream PrimeNumberDecompositionResponse) {};
 }
