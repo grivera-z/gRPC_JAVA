@@ -32,7 +32,7 @@ public class CalculatorClient {
     */
 
     PrimeNumberDecompositionRequest primeNumberDecompositionRequest = PrimeNumberDecompositionRequest.newBuilder()
-            .setNumber(120)
+            .setNumber(1222445555)
             .build();
 
     calculatorClient.primeNumberDecomposition(primeNumberDecompositionRequest).forEachRemaining(primeNumberDecompositionResponse -> {

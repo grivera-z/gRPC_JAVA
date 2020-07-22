@@ -3,5 +3,5 @@ package testproto;
 import "testproto/timestamp.proto";
 
 message TestMessage {
-    Timestamp timestamp = 1;
+    Timestamp timestampxxxx = 1;
 }
