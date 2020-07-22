@@ -1,11 +1,6 @@
 package com.github.simplesteph.grpc.greeting.server;
 
-import com.proto.greet.GreetManyTimesRequest;
-import com.proto.greet.GreetManyTimesResponse;
-import com.proto.greet.GreetRequest;
-import com.proto.greet.GreetResponse;
-import com.proto.greet.GreetServiceGrpc;
-import com.proto.greet.Greeting;
+import com.proto.greet.*;
 import io.grpc.stub.StreamObserver;
 
 public class GreetServiceImpl extends GreetServiceGrpc.GreetServiceImplBase {
@@ -15,9 +10,10 @@ public class GreetServiceImpl extends GreetServiceGrpc.GreetServiceImplBase {
     // Extract the fields we need
     Greeting greeting = request.getGreeting();
     String firstName = greeting.getFirstName();
+    String lastName = greeting.getLastName();
 
     // Create the response
-    String result = "Hello " +  firstName;
+    String result = "Hello " +  firstName + " " + lastName;
     GreetResponse response = GreetResponse.newBuilder()
         .setResult(result)
         .build();
@@ -47,5 +43,36 @@ public class GreetServiceImpl extends GreetServiceGrpc.GreetServiceImplBase {
       // Complete the RPC call
       responseObserver.onCompleted();
     }
+  }
+
+  @Override
+  public StreamObserver<LongGreatRequest> longGreet(StreamObserver<LongGreetResponse> responseObserver) {
+    StreamObserver<LongGreatRequest> requestObserver = new StreamObserver<LongGreatRequest>() {
+      String result = "";
+
+      @Override
+      public void onNext(LongGreatRequest value) {
+        //Client sends a message
+        result += "Hello " + value.getGreeting().getFirstName() + "! \n";
+      }
+
+      @Override
+      public void onError(Throwable t) {
+        // Client sends an Error
+      }
+
+      @Override
+      public void onCompleted() {
+        // Client is done
+        responseObserver.onNext(
+                LongGreetResponse.newBuilder()
+                .setResult(result)
+                .build()
+        );
+        // this is when we want to return a response (responseObserver)
+        responseObserver.onCompleted();
+      }
+    };
+    return requestObserver;
   }
 }

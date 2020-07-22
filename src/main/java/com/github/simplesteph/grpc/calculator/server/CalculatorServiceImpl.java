@@ -4,6 +4,9 @@ package com.github.simplesteph.grpc.calculator.server;
 import com.proto.sum.*;
 import io.grpc.stub.StreamObserver;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class CalculatorServiceImpl extends CalculatorServiceGrpc.CalculatorServiceImplBase {
 
   @Override
@@ -47,8 +50,44 @@ public class CalculatorServiceImpl extends CalculatorServiceGrpc.CalculatorServi
 
       // Complete the RPC call
       responseObserver.onCompleted();
-
   }
 
+  @Override
+  public StreamObserver<ComputeAverageRequest> computeAverage(StreamObserver<ComputeAverageResponse> responseObserver) {
+    StreamObserver<ComputeAverageRequest> requestObserver = new StreamObserver<ComputeAverageRequest>() {
+
+      // Running sum and running count
+      int count = 0;
+      int sum = 0;
+
+
+      @Override
+      public void onNext(ComputeAverageRequest value) {
+        //Client sends a message
+        sum += value.getNumber();
+        count++;
+      }
+
+      @Override
+      public void onError(Throwable t) {
+
+      }
+
+      @Override
+      public void onCompleted() {
+        double average = (double) sum/count;
+
+        responseObserver.onNext(
+                ComputeAverageResponse
+                        .newBuilder()
+                        .setAverage(average)
+                        .build()
+        );
+
+        // this is when we want to return a response (responseObserver)
+        responseObserver.onCompleted();
+      }
+    };
+    return requestObserver;  }
 
 }
