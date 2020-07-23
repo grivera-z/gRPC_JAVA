@@ -1,10 +1,13 @@
 package com.github.simplesteph.grpc.calculator.client;
 
+import com.proto.greet.GreetEveryoneRequest;
+import com.proto.greet.Greeting;
 import com.proto.sum.*;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
 
+import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -20,13 +23,74 @@ public class CalculatorClient {
       ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost",50051).usePlaintext().build();
       //doUnaryCall(channel,10,22);
       //doServerStreamingCall(channel, 120);
-      doClientStreamingCall(channel);
+      //doClientStreamingCall(channel);
+      doBiDiStreamingCall(channel);
 
       //do something
       System.out.println("Shutting down Channel");
       channel.shutdown();
   }
-  private void doUnaryCall(ManagedChannel channel,int setFirstValue,int setSecondValue) {
+
+    private void doBiDiStreamingCall(ManagedChannel channel) {
+        CalculatorServiceGrpc.CalculatorServiceStub asyncClient = CalculatorServiceGrpc.newStub(channel);
+
+        CountDownLatch latch = new CountDownLatch(1);
+
+        StreamObserver <FindMaximumRequest> requestObserver = asyncClient.findMaximum(new StreamObserver<FindMaximumResponse>() {
+            @Override
+            public void onNext(FindMaximumResponse value) {
+                // we get a response from the server
+                System.out.println("Received a new Maximum from the server: " + value.getMaximum());
+                // onNext will be called only once
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                latch.countDown();
+                // we get an error from the server
+            }
+
+            @Override
+            public void onCompleted() {
+                // the server is done sending us data
+                System.out.println("Server has completed sending us something");
+                latch.countDown();
+                // onCompleted will be called right after onNext
+            }
+
+        });
+
+
+
+        // we tell the server that the client is done sending data
+        Arrays.asList(3,5,17,9,8,30,12).forEach(
+                number -> {
+                    System.out.println("Sending: " + number);
+                    requestObserver.onNext(
+                            FindMaximumRequest.newBuilder()
+                                    .setNumber(number)
+                                    .build()
+                    );
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+        );
+
+        requestObserver.onCompleted();
+
+        try {
+            latch.await(3L, TimeUnit.SECONDS);
+        } catch (InterruptedException e){
+            e.printStackTrace();
+        }
+
+
+    }
+
+    private void doUnaryCall(ManagedChannel channel,int setFirstValue,int setSecondValue) {
       CalculatorServiceGrpc.CalculatorServiceBlockingStub calculatorClient = CalculatorServiceGrpc.newBlockingStub(channel);
 
       //unitary
@@ -42,8 +106,7 @@ public class CalculatorClient {
       // print result
       System.out.println(sumRequest.getFirstValue() + " + " + sumRequest.getSecondValue() + ": " + sumResponse.getSumResult());
   }
-
-  private void doServerStreamingCall(ManagedChannel channel,int number) {
+    private void doServerStreamingCall(ManagedChannel channel,int number) {
       CalculatorServiceGrpc.CalculatorServiceBlockingStub calculatorClient = CalculatorServiceGrpc.newBlockingStub(channel);
       PrimeNumberDecompositionRequest primeNumberDecompositionRequest = PrimeNumberDecompositionRequest.newBuilder()
               .setNumber(number)
@@ -53,34 +116,33 @@ public class CalculatorClient {
         System.out.println(primeNumberDecompositionResponse.getPrimeFactor());
       });
   }
+    private void doClientStreamingCall(ManagedChannel channel) {
+        CalculatorServiceGrpc.CalculatorServiceStub asyncClient = CalculatorServiceGrpc.newStub(channel);
 
-  private void doClientStreamingCall(ManagedChannel channel) {
-    CalculatorServiceGrpc.CalculatorServiceStub asyncClient = CalculatorServiceGrpc.newStub(channel);
+        CountDownLatch latch = new CountDownLatch(1);
 
-    CountDownLatch latch = new CountDownLatch(1);
+        StreamObserver <ComputeAverageRequest> requestObserver = asyncClient.computeAverage(new StreamObserver<ComputeAverageResponse>() {
 
-    StreamObserver <ComputeAverageRequest> requestObserver = asyncClient.computeAverage(new StreamObserver<ComputeAverageResponse>() {
+          @Override
+          public void onNext(ComputeAverageResponse value) {
+            // we get a response from the server
+            System.out.println("Received a response from the server");
+            System.out.println(value.getAverage());
+            // onNext will be called only once
+          }
 
-      @Override
-      public void onNext(ComputeAverageResponse value) {
-        // we get a response from the server
-        System.out.println("Received a response from the server");
-        System.out.println(value.getAverage());
-        // onNext will be called only once
-      }
+          @Override
+          public void onError(Throwable t) {
+            // we get an error from the server
+          }
 
-      @Override
-      public void onError(Throwable t) {
-        // we get an error from the server
-      }
-
-      @Override
-      public void onCompleted() {
-        // the server is done sending us data
-        System.out.println("Server has completed sending us something");
-        latch.countDown();
-        // onCompleted will be called right after onNext
-      }
+          @Override
+          public void onCompleted() {
+            // the server is done sending us data
+            System.out.println("Server has completed sending us something");
+            latch.countDown();
+            // onCompleted will be called right after onNext
+          }
     });
 
     // Steaming message #1
