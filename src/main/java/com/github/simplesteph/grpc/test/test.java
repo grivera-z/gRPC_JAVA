@@ -1,6 +1,7 @@
 package com.github.simplesteph.grpc.test;
 
 import java.time.Instant;
+import java.util.Date;
 import testproto.Test.*;
 import testproto.TimestampOuterClass;
 
@@ -9,6 +10,8 @@ public class test {
     System.out.println(Instant.ofEpochMilli(1));
     System.out.println(Instant.ofEpochMilli(2));
     System.out.println(Instant.now());
+    System.out.println(new Date().getTime());
+
 
 
     TestMessage testMessage = TestMessage.newBuilder()
