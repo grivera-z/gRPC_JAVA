@@ -5,6 +5,7 @@ import com.proto.greet.Greeting;
 import com.proto.sum.*;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 
 import java.util.Arrays;
@@ -24,71 +25,13 @@ public class CalculatorClient {
       //doUnaryCall(channel,10,22);
       //doServerStreamingCall(channel, 120);
       //doClientStreamingCall(channel);
-      doBiDiStreamingCall(channel);
+      //doBiDiStreamingCall(channel);
+      doErrorCall(channel, -1);
 
       //do something
       System.out.println("Shutting down Channel");
       channel.shutdown();
   }
-
-    private void doBiDiStreamingCall(ManagedChannel channel) {
-        CalculatorServiceGrpc.CalculatorServiceStub asyncClient = CalculatorServiceGrpc.newStub(channel);
-
-        CountDownLatch latch = new CountDownLatch(1);
-
-        StreamObserver <FindMaximumRequest> requestObserver = asyncClient.findMaximum(new StreamObserver<FindMaximumResponse>() {
-            @Override
-            public void onNext(FindMaximumResponse value) {
-                // we get a response from the server
-                System.out.println("Received a new Maximum from the server: " + value.getMaximum());
-                // onNext will be called only once
-            }
-
-            @Override
-            public void onError(Throwable t) {
-                latch.countDown();
-                // we get an error from the server
-            }
-
-            @Override
-            public void onCompleted() {
-                // the server is done sending us data
-                System.out.println("Server has completed sending us something");
-                latch.countDown();
-                // onCompleted will be called right after onNext
-            }
-
-        });
-
-
-
-        // we tell the server that the client is done sending data
-        Arrays.asList(3,5,17,9,8,30,12).forEach(
-                number -> {
-                    System.out.println("Sending: " + number);
-                    requestObserver.onNext(
-                            FindMaximumRequest.newBuilder()
-                                    .setNumber(number)
-                                    .build()
-                    );
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-        );
-
-        requestObserver.onCompleted();
-
-        try {
-            latch.await(3L, TimeUnit.SECONDS);
-        } catch (InterruptedException e){
-            e.printStackTrace();
-        }
-
-
-    }
 
     private void doUnaryCall(ManagedChannel channel,int setFirstValue,int setSecondValue) {
       CalculatorServiceGrpc.CalculatorServiceBlockingStub calculatorClient = CalculatorServiceGrpc.newBlockingStub(channel);
@@ -179,4 +122,78 @@ public class CalculatorClient {
     }
 
   }
+    private void doBiDiStreamingCall(ManagedChannel channel) {
+    CalculatorServiceGrpc.CalculatorServiceStub asyncClient = CalculatorServiceGrpc.newStub(channel);
+
+    CountDownLatch latch = new CountDownLatch(1);
+
+    StreamObserver <FindMaximumRequest> requestObserver = asyncClient.findMaximum(new StreamObserver<FindMaximumResponse>() {
+      @Override
+      public void onNext(FindMaximumResponse value) {
+        // we get a response from the server
+        System.out.println("Received a new Maximum from the server: " + value.getMaximum());
+        // onNext will be called only once
+      }
+
+      @Override
+      public void onError(Throwable t) {
+        latch.countDown();
+        // we get an error from the server
+      }
+
+      @Override
+      public void onCompleted() {
+        // the server is done sending us data
+        System.out.println("Server has completed sending us something");
+        latch.countDown();
+        // onCompleted will be called right after onNext
+      }
+
+    });
+
+
+
+    // we tell the server that the client is done sending data
+    Arrays.asList(3,5,17,9,8,30,12).forEach(
+        number -> {
+          System.out.println("Sending: " + number);
+          requestObserver.onNext(
+              FindMaximumRequest.newBuilder()
+                  .setNumber(number)
+                  .build()
+          );
+          try {
+            Thread.sleep(100);
+          } catch (InterruptedException e) {
+            e.printStackTrace();
+          }
+        }
+    );
+
+    requestObserver.onCompleted();
+
+    try {
+      latch.await(3L, TimeUnit.SECONDS);
+    } catch (InterruptedException e){
+      e.printStackTrace();
+    }
+
+
+  }
+
+    private void doErrorCall(ManagedChannel channel, int number){
+      CalculatorServiceGrpc.CalculatorServiceBlockingStub blokingStub = CalculatorServiceGrpc.newBlockingStub(channel);
+
+      try{
+        blokingStub.squareRoot(
+            SquareRootRequest.newBuilder()
+                .setNumber(number)
+                .build());
+      }catch (StatusRuntimeException e){
+          System.out.println("Got an exception for square root!");
+          e.printStackTrace();
+      }
+
+    }
+
 }

@@ -4,4 +4,5 @@ import "testproto/timestamp.proto";
 
 message TestMessage {
     Timestamp timestampxxxx = 1;
+    int32 number = 2;
 }
