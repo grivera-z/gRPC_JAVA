@@ -12,3 +12,7 @@ build
 /src/main/proto/alertinnovation/rcs/
 Brewfile.lock.json
 /out
+*.crt
+*.key
+*.pem
+*.csr
